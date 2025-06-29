@@ -1,0 +1,30 @@
+
+<main class="main">
+  <div class="content">
+<!-- add connecction to repos and commits  -->
+<mat-sidenav-container class="sidenav-container">
+    <mat-sidenav #drawer mode="side" opened class="sidenav">
+      <h3 class="sidenav-title">GitHub Explorer</h3>
+      <mat-nav-list role="list">
+        <a mat-list-item routerLink="/repos" routerLinkActive="active-link">
+          <mat-icon>search</mat-icon>
+          <span class="text-nav">Repos</span>
+        </a>
+      </mat-nav-list>
+    </mat-sidenav>
+
+    <mat-sidenav-content>
+      <mat-toolbar color="primary">
+        <button mat-icon-button (click)="drawer.toggle()" class="menu-button" aria-label="Toggle sidenav">
+          <mat-icon>menu</mat-icon>
+        </button>
+        <span>GitHub Explorer</span>
+      </mat-toolbar>
+      <router-outlet />
+      
+    </mat-sidenav-content>
+  </mat-sidenav-container>
+
+  </div>
+</main>
+

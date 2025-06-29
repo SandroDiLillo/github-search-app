@@ -1,0 +1,48 @@
+.sidenav-container {
+  height: 100vh;
+  background: #f6f8fa; /* GitHub background */
+}
+.sidenav {
+  width: 220px;
+  background: #fff; /* GitHub sidebar/nav */
+  color: #1f23285d;
+  padding-top: 16px;
+}
+.text-nav {
+  color: #1f23285d;
+  font-size: 1.2rem;
+  font-weight: 500;
+}
+.sidenav-title {
+  text-align: center;
+  margin: 0 0 12px 0;
+  font-weight: 700;
+  font-size: 1.4rem;
+}
+.mat-list-item {
+  color: #fff;
+  font-weight: 500;
+}
+.mat-list-item.active-link {
+  background: rgba(255, 255, 255, 0.08);
+  font-weight: 700;
+}
+.mat-list-item:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+.mat-icon {
+  margin-right: 12px;
+}
+.menu-button {
+  margin-right: 16px;
+}
+.main-content {
+  padding: 24px;
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .sidenav {
+    width: 200px;
+  }
+}
