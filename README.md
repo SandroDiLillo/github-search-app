@@ -29,11 +29,6 @@ A modern web application for searching GitHub users and repositories, built with
 - ⚡ **Responsive UI:** Built with Angular Material for a modern, responsive experience.
 - 🔗 **Direct Links:** Quickly navigate to GitHub profiles and repositories.
 - 🛠️ **Configurable API:** Easily set your own GitHub API token for higher rate limits.
-
-## Demo
-
-> _Add a link or screenshots here if available._
-
 ---
 
 ## Getting Started
@@ -92,21 +87,7 @@ Visit [http://localhost:4200/](http://localhost:4200/) in your browser. The app 
 - `npm run watch` – Build and watch for changes.
 - `npm test` – Run unit tests.
 
-### Code Generation
 
-Generate a new component:
-
-```bash
-ng generate component component-name
-```
-
-For more schematics (e.g., `directive`, `pipe`):
-
-```bash
-ng generate --help
-```
-
----
 
 ## Building
 
@@ -117,16 +98,6 @@ ng build
 ```
 
 The build artifacts are stored in the `dist/` directory.
-
----
-
-## Testing
-
-Run unit tests:
-
-```bash
-ng test
-```
 
 ---
 
