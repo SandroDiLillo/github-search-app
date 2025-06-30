@@ -4,8 +4,9 @@
 }
 .sidenav {
   width: 220px;
-  background: #fff; /* GitHub sidebar/nav */
+  background:rgba(255, 255, 255, 0.08);
   color: #1f23285d;
+  border: #1f23285d 1px solid;
   padding-top: 16px;
 }
 .text-nav {

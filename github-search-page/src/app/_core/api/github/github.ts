@@ -20,6 +20,12 @@ export class Github {
   private readonly authToken = environment.githubToken;
 
   constructor(private http: HttpClient) { }
+
+  /**
+   * Searches GitHub issues by title.
+   * @param params HttpParams containing search criteria.
+   * @returns Observable of GithubApiResponse containing search results.
+   */
   searchReposByIssueTitle(params: HttpParams): Observable<GithubApiResponse> {
     const url = `${this.baseUrl}${environment.githubSearchIssuesPath}`;
     return this.http.get<GithubIssue>(url, { params })
@@ -30,6 +36,11 @@ export class Github {
       );
   }
 
+  /**
+   * Extracts unique repositories from the issues returned by the GitHub API.
+   * @param issues The issues returned by the GitHub API.
+   * @returns An object containing unique repositories and their total count.
+   */
   private extractUniqueReposFromIssues(issues: GithubIssue): GithubApiResponse {
     const repoMap = new Map<string, Repo>();
     for (const issue of issues.items) {
@@ -61,7 +72,11 @@ export class Github {
     };
   }
 
-
+  /**
+   * Searches GitHub repositories based on the provided parameters.
+   * @param params HttpParams containing search criteria.
+   * @returns Observable of GithubApiResponse containing search results.
+   */
   searchRepositories(
     params: HttpParams
   ): Observable<GithubApiResponse> {
@@ -80,6 +95,12 @@ export class Github {
       );
   }
 
+/**
+   * Fetches commits for a specific repository.
+   * @param owner The owner of the repository.
+   * @param repo The name of the repository.
+   * @returns Observable of Commit array containing commit details.
+   */
 
   getCommits(owner: string, repo: string): Observable<Commit[]> {
   const url = `https://api.github.com/repos/${owner}/${repo}/commits`;

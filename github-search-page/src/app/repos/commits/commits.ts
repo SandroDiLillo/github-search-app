@@ -7,6 +7,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatTableModule } from '@angular/material/table';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { Github } from '../../_core/api/github/github';
+import { Commit } from '../model/CommitsPage';
 
 @Component({
   selector: 'app-commits',
@@ -21,7 +22,7 @@ import { Github } from '../../_core/api/github/github';
   styleUrl: './commits.css'
 })
 export class Commits {
-  commits: any[] = [];
+  commits: Commit[] = [];
   displayedColumns: string[] = ['author', 'message', 'url'];
 
   constructor(
@@ -30,8 +31,12 @@ export class Commits {
   ) {}
 
   ngOnInit(): void {
-    const fullName = this.route.snapshot.paramMap.get('owner'); // e.g., "owner/repo"
-    const repo = this.route.snapshot.paramMap.get('repo'); // e.g., "repo"
+    const fullName = this.route.snapshot.paramMap.get('owner'); 
+    const repo = this.route.snapshot.paramMap.get('repo'); 
+    this.loadRepositoryCommits(fullName, repo);
+  }
+
+  private loadRepositoryCommits(fullName: string | null, repo: string | null) {
     if (fullName && repo) {
       this.githubService.getCommits(fullName, repo).subscribe((data) => {
         this.commits = data;

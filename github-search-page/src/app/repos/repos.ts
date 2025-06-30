@@ -10,9 +10,11 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatTableModule } from '@angular/material/table';
 import { MatTabsModule } from '@angular/material/tabs';
 import { Router, RouterModule } from '@angular/router';
-import { BehaviorSubject, catchError, combineLatest, debounceTime, distinctUntilChanged, map, Observable, of, startWith, switchMap, tap } from 'rxjs';
+import { BehaviorSubject, catchError, combineLatest, debounceTime, distinctUntilChanged, map, Observable, of, startWith, switchMap, takeUntil, tap } from 'rxjs';
 import { Github } from '../_core/api/github/github';
+import { unSubscribe } from '../shared/util/unsubscribe.mixin';
 import { Repo } from './model/SearchPage';
+import { LoaderService } from '../_core/services/loader';
 @Component({
   selector: 'app-repos',
   standalone: true,
@@ -34,9 +36,9 @@ import { Repo } from './model/SearchPage';
   templateUrl: './repos.html',
   styleUrls: ['./repos.css']
 })
-export class Repos implements OnInit {
-  constructor(private fb: FormBuilder, private githubService: Github, private router: Router) {
-    // The constructor is used to inject dependencies
+export class Repos extends unSubscribe implements OnInit {
+  constructor(private fb: FormBuilder, private githubService: Github, private router: Router, private loaderService: LoaderService) {
+    super()
   }
   selectedTabIndex = 0;
   repoForm!: UntypedFormGroup;
@@ -51,29 +53,14 @@ export class Repos implements OnInit {
   pageIndex = 0;
   pageSize = 20;
   totalCount = 0;
-  isLoading = false;
   private pageChange$ = new BehaviorSubject<{ pageIndex: number, pageSize: number }>({ pageIndex: 0, pageSize: 20 });
   private tabChange$ = new BehaviorSubject<number>(0);
 
   ngOnInit() {
-    this.repoForm = this.fb.group({
-      nameControl: ['', [Validators.required, Validators.minLength(3)]],
-      languageControl: [''],
-      starsControl: [0],
-    });
-
-    this.issueForm = this.fb.group({
-      issueTextControl: ['', [Validators.required]],
-    });
-
+    this.initializeRepoForm();
+    this.initializeIssueForm();
     // Watch tab changes and reset pagination + trigger search
-    this.tabChange$.subscribe(tabIndex => {
-      this.pageChange$.next({ pageIndex: 0, pageSize: 20 });
-      // reset forms if you want
-      if (tabIndex === 0) this.issueForm.reset();
-      else this.repoForm.reset();
-    });
-
+    this.getTabChangesAndUpdatePageAndForm();
     // Combine tab, page changes and form value changes to trigger search
     this.repos$ = combineLatest([
       this.tabChange$,
@@ -89,55 +76,91 @@ export class Repos implements OnInit {
         distinctUntilChanged((a, b) => JSON.stringify(a) === JSON.stringify(b))
       )
     ]).pipe(
-      tap(() => {
-        this.isLoading = true;
-      }),
       switchMap(([tabIndex, page, repoFormVal, issueFormVal]) => {
+        this.loaderService.show();
         if (tabIndex === 0) {
           // repo tab
           const q = this.buildRepoQuery(repoFormVal);
           if (!q) {
             this.totalCount = 0;
+            this.loaderService.hide();
             return of([]);
           }
-          const params = new HttpParams()
-            .set('q', q)
-            .set('sort', 'stars')
-            .set('order', 'desc')
-            .set('per_page', page.pageSize.toString())
-            .set('page', (page.pageIndex + 1).toString());
+          const params = this.generateSearchParamsForRepos(q, page);
           return this.githubService.searchRepositories(params).pipe(
             tap(res => this.totalCount = res.total_count ?? 0),
-            map(res => res.items ?? [])
+            map(res => res.items ?? []),
+            tap(() => this.loaderService.hide())
           );
         } else {
           // issue tab
           const issueText = issueFormVal.issueTextControl?.trim() ?? '';
           if (!issueText) {
             this.totalCount = 0;
+            this.loaderService.hide();
             return of([]);
           }
-          const q = `*${issueText}* in:title`;
-          const params = new HttpParams()
-            .set('q', q)
-            .set('per_page', page.pageSize.toString())
-            .set('page', (page.pageIndex + 1).toString());
+          const params = this.generateSearchParamsForIssues(issueText, page);
           return this.githubService.searchReposByIssueTitle(params).pipe(
             tap(res => this.totalCount = res.total_count ?? 0),
-            map(res => res.items ?? [])
+            map(res => res.items ?? []),
+            tap(() => this.loaderService.hide())
 
           );
         }
       }),
+      takeUntil(this.unSubscribe$),
       catchError(err => {
         console.error('Error fetching repositories:', err);
-        this.isLoading = false;
+        this.loaderService.hide();
         this.totalCount = 0;
+        this.router.navigate(['/500']);
         return of([]);
       })
     )
 
 
+  }
+
+  private generateSearchParamsForRepos(q: string, page: { pageIndex: number; pageSize: number; }) {
+    return new HttpParams()
+      .set('q', q)
+      .set('sort', 'stars')
+      .set('order', 'desc')
+      .set('per_page', page.pageSize.toString())
+      .set('page', (page.pageIndex + 1).toString());
+  }
+
+  private generateSearchParamsForIssues(issueText: any, page: { pageIndex: number; pageSize: number; }) {
+    const q = `*${issueText}* in:title`;
+    const params = new HttpParams()
+      .set('q', q)
+      .set('per_page', page.pageSize.toString())
+      .set('page', (page.pageIndex + 1).toString());
+    return params;
+  }
+
+  private initializeIssueForm() {
+    this.issueForm = this.fb.group({
+      issueTextControl: ['', [Validators.required]],
+    });
+  }
+
+  private initializeRepoForm() {
+    this.repoForm = this.fb.group({
+      nameControl: ['', [Validators.required, Validators.minLength(3)]],
+      languageControl: [''],
+      starsControl: [0],
+    });
+  }
+
+  private getTabChangesAndUpdatePageAndForm() {
+    this.tabChange$.subscribe(tabIndex => {
+      this.pageChange$.next({ pageIndex: 0, pageSize: 20 });
+      // reset forms if you want
+      if (tabIndex === 0) this.issueForm.reset();
+      else this.repoForm.reset();
+    });
   }
 
   // Helper to build repo query string
@@ -160,13 +183,13 @@ export class Repos implements OnInit {
   }
 
   openCommits(repo: Repo): void {
-  const repoFullName = repo.owner.login; 
-  const repoName = repo.name;
-  if (!repoFullName || !repoName) {
-    console.error('Repository full name or name is missing:', repo);
-    return;
+    const repoFullName = repo.owner.login;
+    const repoName = repo.name;
+    if (!repoFullName || !repoName) {
+      console.error('Repository full name or name is missing:', repo);
+      return;
+    }
+    // Navigate to the commits page with the full repository name
+    this.router.navigate(['/commits', repoFullName, repoName])
   }
-  // Navigate to the commits page with the full repository name
-  this.router.navigate(['/commits', repoFullName, repoName])
-}
 }
