@@ -1,8 +1,7 @@
-
 export const environment = {
-  production: true,
-  githubToken: '', 
+  production: false,
+  githubToken: '',  
   githubApiBaseUrl: 'https://api.github.com',
   githubSearchReposPath: '/search/repositories',
-    githubSearchIssuesPath: '/search/issues',
-};
+  githubSearchIssuesPath: '/search/issues',
+}
